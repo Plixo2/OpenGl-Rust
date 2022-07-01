@@ -1,0 +1,27 @@
+[package]
+name = "hello_world"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+# opengl + loader
+glfw = "0.45.0"
+gl = "0.14.0"
+
+# user interface + bindings
+imgui = "0.8.2"
+imgui-opengl-renderer = "0.11.1"
+
+# vector libary
+glam = "0.21.2"
+
+# obj loader
+tobj = "3.2.2"
+
+# image loading
+image = "0.24.2"
+
+
+
