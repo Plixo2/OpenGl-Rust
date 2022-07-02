@@ -3,6 +3,7 @@ extern crate gl;
 
 use std::ffi::{CStr, CString};
 use std::fs::{self, File, OpenOptions};
+use std::io::Write;
 use std::path::Path;
 use std::ptr;
 
@@ -40,6 +41,15 @@ impl Shader {
 
             gl::UniformMatrix4fv(location, 1, gl::FALSE, &mat.to_cols_array()[0]);
         }
+    }
+
+    pub fn from_toml(location: &Path) -> Shader {
+        let toml = fs::read_to_string(location).unwrap();
+        let (vertex, fragment, _config) = dsa_lib::compile_toml(toml.as_str()).unwrap();
+        let vert_link = Shader::compile(gl::VERTEX_SHADER, vertex.as_str());
+        let frag_link = Shader::compile(gl::FRAGMENT_SHADER, fragment.as_str());
+        let handle = Shader::link(frag_link, vert_link);
+        return Shader { program: handle };
     }
 
     pub fn load(location: &Path) -> Shader {

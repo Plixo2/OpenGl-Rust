@@ -1,0 +1,28 @@
+version = 330
+profile = "core"
+
+[layout]
+aPos = "vec3"
+aColor = "vec3"
+aTexCoord = "vec2"
+
+[uniform]
+model = "mat4"
+view = "mat4"
+projection = "mat4"
+texture1 = "sampler2D"
+
+
+[fragment]
+output = { FragColor = "vec4" }
+source = '''
+    FragColor = texture(texture1, TexCoord) * vec4(1.0,0.7,0.9,1.0);
+'''
+
+[vertex]
+output = { ourColor = "vec3" , TexCoord = "vec2"  }
+source = '''
+    gl_Position = projection * view * model * vec4(aPos, 1.0);
+    ourColor = aColor;
+    TexCoord = aTexCoord;
+'''

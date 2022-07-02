@@ -1,3 +1,6 @@
+use std::collections::HashMap;
+use std::os::raw::c_void;
+
 use gl::types::GLenum;
 
 use crate::Texture2D;
@@ -102,6 +105,92 @@ impl State for RenderBuffer {
     fn unbind(&self) {
         unsafe {
             gl::BindRenderbuffer(gl::RENDERBUFFER, 0);
+        }
+    }
+}
+
+pub struct RenderTarget {
+    frame_buffer: FrameBuffer,
+    attachments: HashMap<u32, RenderAttachment>,
+}
+
+impl RenderTarget {
+    pub fn new(width: u32, height: u32) -> RenderTarget {
+        RenderTarget {
+            frame_buffer: FrameBuffer::new(width, height),
+            attachments: HashMap::new(),
+        }
+    }
+    pub fn finish(&self) {
+        self.frame_buffer.bind();
+        self.frame_buffer.assert_status();
+        self.frame_buffer.unbind();
+    }
+    pub fn bind(&self) {
+        self.frame_buffer.bind();
+    }
+    pub fn unbind(&self) {
+        self.frame_buffer.unbind();
+    }
+
+    pub fn new_texture(&mut self, target: GLenum) -> &Texture2D {
+        self.frame_buffer.bind();
+        let texture = Texture2D::new(self.frame_buffer.width, self.frame_buffer.height);
+        texture.bind();
+        texture.put_data(0 as *const c_void, gl::RGB);
+        texture.tex_parameter(gl::TEXTURE_MIN_FILTER, gl::LINEAR);
+        texture.tex_parameter(gl::TEXTURE_MAG_FILTER, gl::LINEAR);
+        texture.unbind();
+
+        self.attach_texture(texture, target);
+        self.frame_buffer.unbind();
+        self.get(target).unwrap().as_texture().unwrap()
+    }
+
+    pub fn new_buffer(&mut self, target: GLenum) -> &RenderBuffer {
+        self.frame_buffer.bind();
+        let buffer = RenderBuffer::new(self.frame_buffer.width, self.frame_buffer.height);
+        buffer.bind();
+        buffer.storage(gl::DEPTH24_STENCIL8);
+        buffer.unbind();
+
+        self.attach_buffer(buffer, target);
+        self.frame_buffer.unbind();
+        self.get(target).unwrap().as_buffer().unwrap()
+    }
+
+    pub fn attach_buffer(&mut self, buffer: RenderBuffer, attachment: GLenum) {
+        self.frame_buffer.attach_buffer(&buffer, attachment, gl::RENDERBUFFER);
+        self.attachments.insert(attachment, RenderAttachment::Buffer(buffer));
+    }
+
+    pub fn attach_texture(&mut self, texture: Texture2D, attachment: GLenum) {
+        self.frame_buffer.attach_texture(&texture, attachment);
+        self.attachments.insert(attachment, RenderAttachment::Texture2D(texture));
+    }
+
+    pub fn get(&mut self, target: u32) -> Option<&RenderAttachment> {
+        self.attachments.get(&target)
+    }
+}
+
+pub enum RenderAttachment {
+    Buffer(RenderBuffer),
+    Texture2D(Texture2D),
+}
+
+impl RenderAttachment {
+    pub fn as_buffer(&self) -> Option<&RenderBuffer> {
+        match self {
+            RenderAttachment::Buffer(buffer) => Some(buffer),
+            _ => None
+        }
+    }
+    pub fn as_texture(&self) -> Option<&Texture2D> {
+        match self {
+            RenderAttachment::Texture2D(texture) => Some(texture)
+            ,
+            _ => None
         }
     }
 }
