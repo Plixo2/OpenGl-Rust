@@ -1,3 +1,7 @@
+//! original code from https://github.com/K4ugummi/imgui-glfw-rs
+//!
+//! new version forked here https://github.com/Plixo2/imgui-glfw-rs
+
 //! ImGui input handling for Glfw.
 //!
 //! # Example use
@@ -174,7 +178,7 @@ impl ImguiGLFW {
         }
     }
 
-    pub fn frame<'a>(&mut self, window: &mut Window, imgui: &'a mut Context) -> imgui::Ui<'a> {
+    pub fn frame<'a>(&mut self, window: &mut Window, imgui: &'a mut Context) -> Ui<'a> {
         let io = imgui.io_mut();
 
         let now = Instant::now();
